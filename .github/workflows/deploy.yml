@@ -51,6 +51,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Download Pages artifact
+        uses: actions/download-pages-artifact@v2
+        with:
+          path: ./prisha-ugc-portfolio/dist
+
       - name: Deploy to `gh-pages` branch
         id: deploy
         uses: peaceiris/actions-gh-pages@v3
