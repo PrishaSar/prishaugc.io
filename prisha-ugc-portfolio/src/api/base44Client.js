@@ -1,14 +1,29 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
-
-const { appId, token, functionsVersion, appBaseUrl } = appParams;
-
-//Create a client with authentication required
-export const base44 = createClient({
-  appId,
-  token,
-  functionsVersion,
-  serverUrl: '',
-  requiresAuth: false,
-  appBaseUrl
-});
+export const base44 = {
+  auth: {
+    loginViaEmailPassword: async () => {},
+    loginWithProvider: async () => {},
+    logout: () => {},
+    redirectToLogin: () => {},
+    register: async () => {},
+    verifyOtp: async () => {},
+    resetPasswordRequest: async () => {},
+    resetPassword: async () => {},
+    me: async () => null,
+  },
+  entities: {
+    SiteContent: {
+      list: async () => [],
+      filter: async () => [],
+      update: async () => {},
+      create: async () => {},
+    },
+  },
+  functions: {
+    invoke: async () => ({ data: {} }),
+  },
+  integrations: {
+    Core: {
+      UploadFile: async () => ({ file_url: '' }),
+    },
+  },
+};

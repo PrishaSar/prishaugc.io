@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { usePortfolioContent } from "@/lib/PortfolioContentContext";
-import { base44 } from "@/api/base44Client";
-import { Link as LinkIcon, Play, Instagram, Music2, Loader2 } from "lucide-react";
+import { Link as LinkIcon, Play, Instagram, Music2 } from "lucide-react";
 import EditableText from "./EditableText";
 
 function isInstagramUrl(url) {
@@ -30,44 +29,12 @@ export default function EditableReel({ contentKey, fallback, index = 0, viewsFal
   const platform = platformOf(reelUrl);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
-  const [thumb, setThumb] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const thumb = null;
   const inputRef = useRef(null);
 
   useEffect(() => {
     if (editing && inputRef.current) inputRef.current.focus();
   }, [editing]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!platform) {
-      setThumb(null);
-      setFailed(true);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setFailed(false);
-    setThumb(null);
-    base44.functions
-      .invoke(platform === "tiktok" ? "tiktokThumbnail" : "igThumbnail", { url: reelUrl })
-      .then((res) => {
-        if (cancelled) return;
-        const data = res?.data || {};
-        if (data.thumbnail) setThumb(data.thumbnail);
-        else setFailed(true);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reelUrl, platform]);
 
   const startEdit = (e) => {
     if (!canEdit) return;
@@ -132,10 +99,10 @@ export default function EditableReel({ contentKey, fallback, index = 0, viewsFal
           </div>
         </div>
       ) : canEdit ? (
-        <ThumbnailView loading={loading} thumb={thumb} failed={failed} reelUrl={link} platform={platform} />
+        <ThumbnailView thumb={thumb} reelUrl={link} platform={platform} />
       ) : (
         <a href={link} target="_blank" rel="noopener noreferrer" className="block h-full w-full">
-          <ThumbnailView loading={loading} thumb={thumb} failed={failed} reelUrl={link} platform={platform} />
+          <ThumbnailView thumb={thumb} reelUrl={link} platform={platform} />
         </a>
       )}
 

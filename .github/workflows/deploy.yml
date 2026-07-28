@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -51,6 +51,28 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to `gh-pages` branch
+        id: deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./prisha-ugc-portfolio/dist
+          publish_branch: gh-pages
+          keep_files: false
+
+      - name: Ensure Pages source set to `gh-pages` branch
+        id: set-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Setting Pages source to gh-pages branch"
+          curl -sSf -X PUT \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/pages \
+            -d '{"source":{"branch":"gh-pages","path":"/"}}'
+
+      - name: Retrieve published URL
         id: deployment
-        uses: actions/deploy-pages@v4
+        run: |
+          echo "page_url=$(gh api repos/$GITHUB_REPOSITORY/pages --jq .html_url)" >> $GITHUB_OUTPUT

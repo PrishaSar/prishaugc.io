@@ -1,6 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
-import { appParams } from "@/lib/app-params";
+
+const STORAGE_KEY = "prisha_ugc_portfolio_content";
+
+function loadContentFromStorage() {
+  if (typeof window === "undefined" || !window.localStorage) return {};
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.warn("Failed to load saved portfolio content", error);
+    return {};
+  }
+}
+
+function saveContentToStorage(content) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+  } catch (error) {
+    console.warn("Failed to save portfolio content", error);
+  }
+}
 
 const PortfolioContentContext = createContext(null);
 
@@ -9,28 +29,8 @@ export function PortfolioContentProvider({ children }) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!appParams.appId) {
-      setLoaded(true);
-      return;
-    }
-
-    let mounted = true;
-    base44.entities.SiteContent.list()
-      .then((records) => {
-        if (!mounted) return;
-        const map = {};
-        for (const r of records) {
-          const k = r.key ?? r.data?.key;
-          const v = r.value ?? r.data?.value;
-          if (k != null) map[k] = v;
-        }
-        setContent(map);
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-    return () => {
-      mounted = false;
-    };
+    setContent(loadContentFromStorage());
+    setLoaded(true);
   }, []);
 
   const getValue = useCallback(
@@ -41,19 +41,13 @@ export function PortfolioContentProvider({ children }) {
     [content]
   );
 
-  const setValue = useCallback(async (key, value) => {
+  const setValue = useCallback((key, value) => {
     const trimmed = String(value ?? "");
-    setContent((prev) => ({ ...prev, [key]: trimmed }));
-    try {
-      const existing = await base44.entities.SiteContent.filter({ key });
-      if (existing && existing.length > 0) {
-        await base44.entities.SiteContent.update(existing[0].id, { value: trimmed });
-      } else {
-        await base44.entities.SiteContent.create({ key, value: trimmed });
-      }
-    } catch (e) {
-      // Silent: next reload reverts to last saved value
-    }
+    setContent((prev) => {
+      const next = { ...prev, [key]: trimmed };
+      saveContentToStorage(next);
+      return next;
+    });
   }, []);
 
   return (

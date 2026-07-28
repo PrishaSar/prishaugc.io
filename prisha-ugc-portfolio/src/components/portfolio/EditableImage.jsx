@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { usePortfolioContent } from "@/lib/PortfolioContentContext";
-import { base44 } from "@/api/base44Client";
-import { ImagePlus, Upload, Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 
 /**
  * Click-to-edit image for admins. Shows the picture for everyone; admins can
@@ -22,7 +21,6 @@ export default function EditableImage({
   const src = getValue(contentKey, fallback);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
-  const [uploading, setUploading] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -45,21 +43,6 @@ export default function EditableImage({
   const cancel = () => {
     setEditing(false);
     setDraft("");
-  };
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setUploading(true);
-      const res = await base44.integrations.Core.UploadFile({ file });
-      if (res?.file_url) setValue(contentKey, res.file_url);
-      setEditing(false);
-    } catch {
-      // ignore
-    } finally {
-      setUploading(false);
-    }
   };
 
   if (editing && canEdit) {
@@ -87,17 +70,6 @@ export default function EditableImage({
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-              <Upload className="h-3.5 w-3.5" />
-              {uploading ? "Uploading…" : "Upload"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onFile}
-                disabled={uploading}
-              />
-            </label>
             <button
               onClick={commit}
               className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90"
